@@ -3,6 +3,8 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 import json, os, re
 
+from app.graph import run_triage
+
 app = FastAPI(title="Phase 1 Mock API")
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MOCK_DIR = os.path.join(ROOT, "mock_data")
@@ -68,3 +70,10 @@ def triage_invoke(body: TriageInput):
     issue = classify_issue({"ticket_text": text})
     reply = reply_draft({"ticket_text": text, "order": order, "issue_type": issue["issue_type"]})
     return {"order_id": order_id, "issue_type": issue["issue_type"], "order": order, "reply_text": reply["reply_text"]}
+
+@app.post("/triage/graph")
+def triage_graph(body: TriageInput):
+    result = run_triage(body.ticket_text, body.order_id)
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
