@@ -59,23 +59,29 @@ if prompt := st.chat_input("Describe your issue..."):
                         "Please include a valid order ID (e.g. ORD1001) in your message.")
             st.markdown(response)
         else:
-            order = result.get("order", {})
+            order = result.get("order") or {}
             issue = result.get("issue_type", "unknown")
-            confidence = result.get("confidence", 0)
+            evidence = result.get("evidence", "")
+            recommendation = result.get("recommendation", "")
             reply = result.get("reply_text", "")
 
-            # Build a structured response
             lines = []
-            lines.append(f"**Issue classified:** `{issue}` (confidence: {confidence})")
+            lines.append(f"**Issue classified:** `{issue}`")
+            lines.append(f"**Evidence:** {evidence}")
             lines.append("")
-            lines.append(f"**Order:** {result.get('order_id', 'N/A')} — "
-                         f"{order.get('customer_name', '')} — "
-                         f"*{order.get('status', '')}*")
-            if order.get("items"):
-                items_str = ", ".join(
-                    f"{i['name']} (x{i['quantity']})" for i in order["items"]
-                )
-                lines.append(f"**Items:** {items_str}")
+            if result.get("order_id"):
+                lines.append(f"**Order:** {result['order_id']} — "
+                             f"{order.get('customer_name', '')} — "
+                             f"*{order.get('status', '')}*")
+                if order.get("items"):
+                    items_str = ", ".join(
+                        f"{i['name']} (x{i['quantity']})" for i in order["items"]
+                    )
+                    lines.append(f"**Items:** {items_str}")
+            else:
+                lines.append("**Order:** N/A — no order ID found in message")
+            lines.append("")
+            lines.append(f"**Recommendation:** {recommendation}")
             lines.append("")
             lines.append("---")
             lines.append("**Draft reply to customer:**")
